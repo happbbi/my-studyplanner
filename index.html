@@ -42,17 +42,33 @@
         }
     </script>
     <style>
-         @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/LOTTERIACHWAB.woff2'); /* 롯데리아 촵땡겨체 */
-         @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2@1.0/LeeSeoyun.woff2');     /* 이서윤체 */
-        body {font-family: 'LeeSeoyun', sans-serif;}
-        .title-area h2 {font-family: 'LOTTERIACHWAB', cursive, sans-serif; }
-        body {
-            background-color: #F7F3E9;
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: #4A3E2C;
-            font-family: 'Gowun Dodum', 'Noto Sans KR', sans-serif;
+    @font-face {
+        font-family: 'LOTTERIACHWAB';
+        src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/LOTTERIACHWAB.woff2') format('woff2');
+        font-weight: normal;
+        font-display: swap;
+    }
+    @font-face {
+        font-family: 'LeeSeoyun';
+        src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2@1.0/LeeSeoyun.woff2') format('woff2');
+        font-weight: normal;
+        font-display: swap;
+    }
+
+    body {
+        background-color: #F7F3E9;
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        color: #4A3E2C;
+        font-family: 'LeeSeoyun', sans-serif; /* 하나로 합치기 */
+    }
+
+    .title-area h2,
+    h2 {
+        font-family: 'LOTTERIACHWAB', sans-serif;
+    }
+    
         }
         .custom-card {
             background-color: rgba(246, 238, 223, 0.93);
