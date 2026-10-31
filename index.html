@@ -217,7 +217,10 @@
 
                     <!-- Subject Palette List -->
                     <div id="subject-palette" class="flex items-center gap-1.5 overflow-x-auto pb-1">
-                        <!-- Dynamic Subject Chips -->
+                    <div class="flex items-center gap-1.5 text-xs">
+                        <span class="text-cream-800 font-semibold">선택한 과목 색 변경</span>
+                        <input type="color" id="edit-subject-color" onchange="changeSubjectColor(this.value)" class="w-6 h-6 rounded border-0 cursor-pointer p-0 bg-transparent">
+                    </div>    <!-- Dynamic Subject Chips -->
                     </div>
 
                     <!-- Add New Subject Form -->
@@ -422,6 +425,7 @@
 
             document.getElementById('selected-subject-label').textContent = `${currentSubject.name}`;
             document.getElementById('selected-subject-label').style.color = currentSubject.color;
+            document.getElementById('edit-subject-color').value = currentSubject.color;
         }
 
         function selectSubject(sub) {
@@ -835,6 +839,25 @@
             localStorage.removeItem('todoPendingImg');
             localStorage.removeItem('todoDoneImg');
             refreshTodoIcons();
+        }
+        function changeSubjectColor(newColor) {
+            const oldColor = currentSubject.color;
+            if (oldColor === newColor) return;
+
+            // 1) 과목 색 변경 및 저장
+            currentSubject.color = newColor;
+            localStorage.setItem('studyPlannerSubjects', JSON.stringify(subjects));
+    
+    // 2) 이미 칠해둔 모든 날짜의 칸도 새 색으로 교체
+            Object.values(appData).forEach(day => {
+                if (day.timeBlocks) {
+                    day.timeBlocks = day.timeBlocks.map(c => (c === oldColor ? newColor : c));
+                }
+            });
+            saveData();
+
+            renderSubjectPalette();
+            updateTimetableUI();
         }
     </script>
 </body>
