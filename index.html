@@ -64,7 +64,7 @@
         font-family: 'LeeSeoyun', sans-serif; /* 하나로 합치기 */
     }
 
-        }
+        
         .custom-card {
             background-color: rgba(246, 238, 223, 0.93);
             backdrop-filter: blur(8px);
@@ -171,6 +171,19 @@
 
                 <!-- Todo Add Form -->
                 <form id="todo-form" onsubmit="addTodo(event)" class="flex gap-2 mb-3">
+                <div class="flex items-center gap-2 mb-3 text-[11px] text-cream-800">
+                    <label class="flex items-center gap-1 bg-cream-200 hover:bg-cream-300 px-2 py-1 rounded-lg cursor-pointer">
+                        <img id="todo-icon-pending-preview" src="" class="w-4 h-4 rounded object-cover hidden">
+                        할 일 사진
+                        <input type="file" accept="image/*" class="hidden" onchange="uploadImage(event, 'todoPending')">
+                    </label>
+                    <label class="flex items-center gap-1 bg-cream-200 hover:bg-cream-300 px-2 py-1 rounded-lg cursor-pointer">
+                        <img id="todo-icon-done-preview" src="" class="w-4 h-4 rounded object-cover hidden">
+                        완료 사진
+                        <input type="file" accept="image/*" class="hidden" onchange="uploadImage(event, 'todoDone')">
+                    </label>
+                    <button type="button" onclick="resetTodoIcons()" class="opacity-60 hover:opacity-100">초기화</button>
+                </div>
                     <input type="text" id="todo-input" placeholder="할 일을 입력하세요..." class="flex-1 px-3 py-2 rounded-xl border border-cream-300 text-sm focus:outline-none focus:border-cream-500 bg-cream-50">
                     <button type="submit" class="bg-pastel-accent text-white px-3 py-2 rounded-xl text-sm font-semibold hover:bg-pastel-accentHover transition-colors flex items-center justify-center">
                         <i data-lucide="plus" class="w-4 h-4"></i>
@@ -371,6 +384,7 @@
             renderSubjectPalette();
             loadGlobalSettings();
             loadDayData();
+            refreshTodoIcons();
         };
 
         function getDayData(dateStr) {
@@ -566,12 +580,11 @@
                     todo.completed ? 'bg-cream-200/60 border-cream-300 text-cream-800 opacity-70 line-through' : 'bg-cream-50 border-cream-300 text-cream-900'
                 }`;
 
-                // Emoji changes based on status
-                const emoji = todo.completed ? '🎉' : '📝';
+                
 
                 li.innerHTML = `
                     <div class="flex items-center gap-2 overflow-hidden cursor-pointer flex-1" onclick="toggleTodo(${todo.id})">
-                        <span class="text-base shrink-0">${emoji}</span>
+                        ${getTodoIconHtml(todo.completed)}
                         <span class="text-xs font-medium truncate">${escapeHtml(todo.text)}</span>
                     </div>
                     <button onclick="deleteTodo(${todo.id})" class="text-cream-800 hover:text-red-500 p-1 opacity-70 hover:opacity-100">
@@ -687,6 +700,12 @@
                 } else if (targetType === 'bgImage') {
                     document.body.style.backgroundImage = `url('${dataUrl}')`;
                     localStorage.setItem('bgImg', dataUrl);
+                } else if (targetType === 'todoPending') {
+                    localStorage.setItem('todoPendingImg', dataUrl);
+                    refreshTodoIcons();
+                } else if (targetType === 'todoDone') {
+                    localStorage.setItem('todoDoneImg', dataUrl);
+                    refreshTodoIcons();    
                 }
             };
             reader.readAsDataURL(file);
@@ -793,6 +812,29 @@
             return text.replace(/[&<"']/g, function(m) {
                 return { '&': '&amp;', '<': '&lt;', '"': '&quot;', "'": '&#039;' }[m];
             });
+        }
+        function getTodoIconHtml(completed) {
+            const img = localStorage.getItem(completed ? 'todoDoneImg' : 'todoPendingImg');
+            if (img) {
+                return `<img src="${img}" class="w-6 h-6 rounded-md object-cover shrink-0">`;
+            }
+            return `<span class="text-base shrink-0">${completed ? '🎉' : '📝'}</span>`; // 사진 없으면 기존 이모지
+        }
+
+        function refreshTodoIcons() {
+            const p = localStorage.getItem('todoPendingImg');
+            const d = localStorage.getItem('todoDoneImg');
+            const pe = document.getElementById('todo-icon-pending-preview');
+            const de = document.getElementById('todo-icon-done-preview');
+            if (p) { pe.src = p; pe.classList.remove('hidden'); } else { pe.classList.add('hidden'); }
+            if (d) { de.src = d; de.classList.remove('hidden'); } else { de.classList.add('hidden'); }
+            renderTodos();
+        }
+
+        function resetTodoIcons() {
+            localStorage.removeItem('todoPendingImg');
+            localStorage.removeItem('todoDoneImg');
+            refreshTodoIcons();
         }
     </script>
 </body>
