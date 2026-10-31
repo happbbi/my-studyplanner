@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랏코 스터디 플래너</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts (Noto Sans KR & Gowun Dodum) -->
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: {
+                            50: '#FDFBF7',
+                            100: '#F7F3E9',
+                            200: '#EFE5CE',
+                            300: '#E4D3AD',
+                            400: '#D5BB88',
+                            500: '#C5A065',
+                            800: '#5C4827',
+                            900: '#3D2F17',
+                        },
+                        pastel: {
+                            card: '#F6EEDF',
+                            border: '#DECDB0',
+                            accent: '#D99B6A',
+                            accentHover: '#C78553',
+                            highlight: '#B8C4A9'
+                        }
+                    },
+                    fontFamily: {
+                        gowun: ['"Gowun Dodum"', 'sans-serif'],
+                        sans: ['"Noto Sans KR"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+         @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/LOTTERIACHWAB.woff2'); /* 롯데리아 촵땡겨체 */
+         @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2@1.0/LeeSeoyun.woff2');     /* 이서윤체 */
+        .title-area h2 {font-family: 'LOTTERIACHWAB', cursive, sans-serif; }
+        body {
+            background-color: #F7F3E9;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #4A3E2C;
+            font-family: 'Gowun Dodum', 'Noto Sans KR', sans-serif;
+        }
+        .custom-card {
+            background-color: rgba(246, 238, 223, 0.93);
+            backdrop-filter: blur(8px);
+            border: 2.5px solid #DECDB0;
+            border-radius: 1.25rem;
+            box-shadow: 0 4px 12px rgba(92, 72, 39, 0.05);
+        }
+        /* Monthly Calendar Heatmap Colors */
+        .heat-lvl-0 { background-color: #F7F3E9; color: #8C7B62; }
+        .heat-lvl-1 { background-color: #F8D7DA; color: #721C24; border-color: #F5C6CB; } /* 1~2h */
+        .heat-lvl-2 { background-color: #FDE8D0; color: #856404; border-color: #FFEBAA; } /* 3~5h */
+        .heat-lvl-3 { background-color: #D4EDDA; color: #155724; border-color: #C3E6CB; } /* 6h+ */
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1E7D4;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D5BB88;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #C5A065;
+        }
+    </style>
+</head>
+<body id="app-body" class="min-h-screen p-3 md:p-6 flex flex-col items-center justify-center transition-all duration-300">
+
+    <div class="w-full max-w-6xl space-y-4">
+        
+        <!-- HEADER ROW (Top Left & Top Right) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <!-- TOP-LEFT: Title Header & Date Picker -->
+            <div class="md:col-span-2 custom-card p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4 w-full sm:w-auto">
+                    <!-- Profile Image Upload -->
+                    <div class="relative group cursor-pointer shrink-0">
+                        <img id="header-profile-img" src="https://placehold.co/100x100/E4D3AD/5C4827?text=락코" alt="Profile" class="w-16 h-16 rounded-2xl object-cover border-2 border-cream-400">
+                        <label for="profile-upload" class="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs cursor-pointer transition-opacity">
+                            <i data-lucide="camera" class="w-5 h-5"></i>
+                        </label>
+                        <input type="file" id="profile-upload" accept="image/*" class="hidden" onchange="uploadImage(event, 'headerProfile')">
+                    </div>
+                    
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="planner-title-input" value="락코와 함께 공부해요!!" class="text-xl md:text-2xl font-bold bg-transparent border-b border-transparent hover:border-cream-400 focus:border-cream-500 focus:outline-none text-cream-900 transition-colors">
+                        </div>
+                        <p class="text-xs md:text-sm text-cream-800 opacity-80 mt-1">오늘도 목표를 향해 달리는 차곡차곡 시간 관리!</p>
+                    </div>
+                </div>
+
+                <!-- Date Picker & Background Upload Button -->
+                <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                    <!-- Change Background Button -->
+                    <label for="bg-upload" class="flex items-center gap-1 bg-cream-200 hover:bg-cream-300 border border-cream-300 px-3 py-2 rounded-xl text-xs font-semibold text-cream-900 cursor-pointer transition-colors w-full sm:w-auto justify-center">
+                        <i data-lucide="image-plus" class="w-4 h-4 text-pastel-accent"></i>
+                        <span>배경 변경</span>
+                    </label>
+                    <input type="file" id="bg-upload" accept="image/*" class="hidden" onchange="uploadImage(event, 'bgImage')">
+                    <button onclick="resetBgImage()" title="배경 초기화" class="p-2 bg-cream-200 hover:bg-cream-300 border border-cream-300 rounded-xl text-cream-800">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    </button>
+
+                    <!-- Date Selection -->
+                    <div class="flex items-center gap-2 bg-cream-100 border border-cream-300 px-3 py-2 rounded-xl w-full sm:w-auto justify-center">
+                        <i data-lucide="calendar" class="w-4 h-4 text-cream-800"></i>
+                        <input type="date" id="current-date-picker" class="bg-transparent font-bold text-cream-900 focus:outline-none cursor-pointer text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOP-RIGHT: Monthly Study Time Button / Card -->
+            <button onclick="openCalendarModal()" class="custom-card p-4 flex flex-col items-center justify-center gap-2 hover:bg-cream-200/90 transition-all cursor-pointer group text-cream-900">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="calendar-days" class="w-6 h-6 text-pastel-accent group-hover:scale-110 transition-transform"></i>
+                    <span class="text-xl font-bold">월간 공부시간</span>
+                </div>
+                <p class="text-xs text-cream-800 opacity-80">클릭하여 시간별 색상 달력 확인하기</p>
+                <div class="mt-1 bg-cream-100 border border-cream-300 px-3 py-1 rounded-full text-xs font-semibold text-pastel-accent">
+                    오늘 총 공부: <span id="today-total-summary">0시간 0분</span>
+                </div>
+            </button>
+        </div>
+
+        <!-- MAIN CONTENT GRID -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <!-- MIDDLE-LEFT: To-Do List -->
+            <div class="custom-card p-5 flex flex-col h-[540px]">
+                <div class="flex items-center justify-between mb-3 border-b border-cream-300 pb-2">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="check-square" class="w-5 h-5 text-pastel-accent"></i>
+                        <h2 class="text-lg font-bold text-cream-900">투두 리스트</h2>
+                    </div>
+                    <span id="todo-count" class="text-xs bg-cream-200 px-2 py-0.5 rounded-full font-medium">0 / 0</span>
+                </div>
+
+                <!-- Todo Add Form -->
+                <form id="todo-form" onsubmit="addTodo(event)" class="flex gap-2 mb-3">
+                    <input type="text" id="todo-input" placeholder="할 일을 입력하세요..." class="flex-1 px-3 py-2 rounded-xl border border-cream-300 text-sm focus:outline-none focus:border-cream-500 bg-cream-50">
+                    <button type="submit" class="bg-pastel-accent text-white px-3 py-2 rounded-xl text-sm font-semibold hover:bg-pastel-accentHover transition-colors flex items-center justify-center">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                    </button>
+                </form>
+
+                <!-- Todo List Items -->
+                <ul id="todo-list" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                    <!-- Dynamic Todo Items -->
+                </ul>
+            </div>
+
+            <!-- MIDDLE COLUMN: Subject Color & 10-Min Study Time Block Tracker -->
+            <div class="custom-card p-5 flex flex-col h-[540px]">
+                <div class="flex items-center justify-between mb-2 border-b border-cream-300 pb-2">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="clock" class="w-5 h-5 text-pastel-accent"></i>
+                        <h2 class="text-lg font-bold text-cream-900">공부시간 체크 (10분)</h2>
+                    </div>
+                    <button onclick="clearTimeBlocks()" class="text-xs text-cream-800 opacity-60 hover:opacity-100 flex items-center gap-1">
+                        <i data-lucide="rotate-ccw" class="w-3 h-3"></i> 리셋
+                    </button>
+                </div>
+
+                <!-- Subject Selector & Add Bar -->
+                <div class="bg-cream-100 border border-cream-300 rounded-xl p-2 mb-2 flex flex-col gap-2">
+                    <div class="flex items-center justify-between text-xs font-semibold text-cream-800">
+                        <span>과목 팔레트 선택</span>
+                        <span id="selected-subject-label" class="text-pastel-accent font-bold">기본 (주황)</span>
+                    </div>
+
+                    <!-- Subject Palette List -->
+                    <div id="subject-palette" class="flex items-center gap-1.5 overflow-x-auto pb-1">
+                        <!-- Dynamic Subject Chips -->
+                    </div>
+
+                    <!-- Add New Subject Form -->
+                    <div class="flex items-center gap-1.5 mt-1 border-t border-cream-200 pt-1.5">
+                        <input type="text" id="new-subject-name" placeholder="과목 추가 (예: 국어)" class="flex-1 px-2 py-1 text-xs rounded-lg border border-cream-300 bg-cream-50 focus:outline-none">
+                        <input type="color" id="new-subject-color" value="#D99B6A" class="w-6 h-6 rounded border-0 cursor-pointer p-0 bg-transparent">
+                        <button onclick="addSubject()" class="bg-cream-300 hover:bg-cream-400 text-cream-900 px-2 py-1 rounded-lg text-xs font-semibold transition-colors">
+                            추가
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Total Time Display Header -->
+                <div class="bg-cream-100 border border-cream-300 rounded-xl p-2 mb-3 text-center flex justify-between items-center px-4">
+                    <span class="text-xs text-cream-800 font-medium">오늘 총 시간</span>
+                    <div id="logged-time-display" class="text-xl font-bold text-pastel-accent">00:00</div>
+                </div>
+
+                <!-- 10-Minute Grid Schedule -->
+                <div class="flex-1 overflow-y-auto pr-1 space-y-1.5 text-xs">
+                    <div id="timetable-grid" class="space-y-1.5"></div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Widgets & Bottom Custom Photo -->
+            <div class="flex flex-col gap-4 h-[540px]">
+                
+                <!-- TOP RIGHT: Function On/Off Controls & Displays -->
+                <div class="custom-card p-4 space-y-3 flex-1 overflow-y-auto">
+                    <div class="flex items-center gap-2 border-b border-cream-300 pb-2">
+                        <i data-lucide="sliders" class="w-5 h-5 text-pastel-accent"></i>
+                        <h2 class="text-lg font-bold text-cream-900">기능 온/오프</h2>
+                    </div>
+
+                    <!-- Toggles -->
+                    <div class="grid grid-cols-3 gap-2 bg-cream-100 p-2 rounded-xl text-xs font-medium">
+                        <label class="flex items-center justify-center gap-1 cursor-pointer">
+                            <input type="checkbox" id="toggle-dday" onchange="toggleWidget('dday')" class="accent-pastel-accent cursor-pointer" checked> D-day
+                        </label>
+                        <label class="flex items-center justify-center gap-1 cursor-pointer">
+                            <input type="checkbox" id="toggle-quote" onchange="toggleWidget('quote')" class="accent-pastel-accent cursor-pointer" checked> 한마디
+                        </label>
+                        <label class="flex items-center justify-center gap-1 cursor-pointer">
+                            <input type="checkbox" id="toggle-song" onchange="toggleWidget('song')" class="accent-pastel-accent cursor-pointer" checked> 노래
+                        </label>
+                    </div>
+
+                    <!-- Dynamic Widgets Container -->
+                    <div class="space-y-2">
+                        <!-- D-Day Box -->
+                        <div id="widget-dday" class="bg-cream-50 border border-cream-300 p-2.5 rounded-xl">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs font-bold text-cream-800">D-Day</span>
+                                <input type="date" id="dday-date" onchange="updateDDay()" class="text-xs bg-transparent border-b border-cream-300 focus:outline-none">
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <input type="text" id="dday-title" value="시험" onchange="saveWidgetData()" class="text-xs font-semibold bg-transparent focus:outline-none w-2/3">
+                                <span id="dday-result" class="text-sm font-bold text-pastel-accent">D-Day</span>
+                            </div>
+                        </div>
+
+                        <!-- Quote of the day -->
+                        <div id="widget-quote" class="bg-cream-50 border border-cream-300 p-2.5 rounded-xl">
+                            <span class="text-xs font-bold text-cream-800 block mb-1">오늘의 한마디</span>
+                            <textarea id="quote-input" oninput="saveWidgetData()" rows="2" placeholder="오늘의 다짐을 적어보세요!" class="w-full text-xs bg-transparent focus:outline-none resize-none">꾸준함이 비결이다!</textarea>
+                        </div>
+
+                        <!-- Song of the day -->
+                        <div id="widget-song" class="bg-cream-50 border border-cream-300 p-2.5 rounded-xl">
+                            <span class="text-xs font-bold text-cream-800 block mb-1">오늘의 추천 노래 🎵</span>
+                            <input type="text" id="song-input" value="NewJeans - Ditto" onchange="saveWidgetData()" class="w-full text-xs font-medium bg-transparent focus:outline-none border-b border-cream-200 pb-0.5">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTTOM RIGHT: Custom Image Card -->
+                <div class="custom-card p-3 relative h-44 flex flex-col justify-center items-center overflow-hidden group">
+                    <img id="custom-photo" src="https://placehold.co/400x200/F1E7D4/5C4827?text=사진을+추가하세요" alt="Custom Photo" class="w-full h-full object-cover rounded-xl">
+                    
+                    <label for="photo-upload" class="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white cursor-pointer transition-opacity">
+                        <i data-lucide="image" class="w-6 h-6 mb-1"></i>
+                        <span class="text-xs font-semibold">사진 변경하기</span>
+                    </label>
+                    <input type="file" id="photo-upload" accept="image/*" class="hidden" onchange="uploadImage(event, 'customPhoto')">
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MONTHLY CALENDAR MODAL (With Heatmap Range Colors) -->
+    <div id="calendar-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="custom-card bg-cream-50 w-full max-w-lg p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-cream-300 pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="calendar" class="w-5 h-5 text-pastel-accent"></i>
+                    <h3 id="modal-month-title" class="text-lg font-bold text-cream-900">월간 공부 달력</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="changeMonth(-1)" class="p-1.5 hover:bg-cream-200 rounded-lg text-cream-800"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                    <button onclick="changeMonth(1)" class="p-1.5 hover:bg-cream-200 rounded-lg text-cream-800"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    <button onclick="closeCalendarModal()" class="p-1.5 hover:bg-cream-200 rounded-lg text-cream-800 ml-2"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+
+            <!-- Heatmap Color Guide -->
+            <div class="flex items-center justify-end gap-2 text-[11px] text-cream-800 font-medium">
+                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded heat-lvl-0 inline-block border"></span> 0h</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded heat-lvl-1 inline-block border"></span> 1-2h</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded heat-lvl-2 inline-block border"></span> 3-5h</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded heat-lvl-3 inline-block border"></span> 6h+</span>
+            </div>
+
+            <!-- Days of Week Header -->
+            <div class="grid grid-cols-7 text-center font-bold text-xs text-cream-800 border-b border-cream-200 pb-2">
+                <span class="text-red-500">일</span>
+                <span>월</span>
+                <span>화</span>
+                <span>수</span>
+                <span>목</span>
+                <span>금</span>
+                <span class="text-blue-500">토</span>
+            </div>
+
+            <!-- Calendar Grid Days -->
+            <div id="calendar-grid" class="grid grid-cols-7 gap-1.5 text-center text-xs">
+                <!-- Days will be dynamically rendered here -->
+            </div>
+
+            <div class="text-right pt-2 border-t border-cream-200">
+                <span class="text-xs text-cream-800">이번 달 총 공부시간: <strong id="modal-month-total" class="text-pastel-accent">0시간 0분</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT APPLICATION LOGIC -->
+    <script>
+        let selectedDate = new Date().toISOString().split('T')[0];
+        let currentModalDate = new Date();
+        let appData = JSON.parse(localStorage.getItem('studyPlannerData')) || {};
+
+        // Subject Palette State
+        let subjects = JSON.parse(localStorage.getItem('studyPlannerSubjects')) || [
+            { id: 'default', name: '기본', color: '#D99B6A' },
+            { id: 'sub1', name: '국어', color: '#E57373' },
+            { id: 'sub2', name: '수학', color: '#64B5F6' },
+            { id: 'sub3', name: '영어', color: '#81C784' }
+        ];
+        let currentSubject = subjects[0];
+
+        const HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2];
+
+        window.onload = function() {
+            lucide.createIcons();
+            
+            const datePicker = document.getElementById('current-date-picker');
+            datePicker.value = selectedDate;
+            datePicker.addEventListener('change', (e) => {
+                selectedDate = e.target.value;
+                loadDayData();
+            });
+
+            renderTimetableGrid();
+            renderSubjectPalette();
+            loadGlobalSettings();
+            loadDayData();
+        };
+
+        function getDayData(dateStr) {
+            if (!appData[dateStr]) {
+                appData[dateStr] = {
+                    todos: [],
+                    timeBlocks: Array(HOURS.length * 6).fill(null) // stores color hex or null
+                };
+            }
+            return appData[dateStr];
+        }
+
+        function saveData() {
+            localStorage.setItem('studyPlannerData', JSON.stringify(appData));
+        }
+
+        // --- SUBJECT PALETTE LOGIC ---
+        function renderSubjectPalette() {
+            const container = document.getElementById('subject-palette');
+            container.innerHTML = '';
+
+            subjects.forEach(sub => {
+                const isSelected = currentSubject.id === sub.id;
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = `px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 border transition-transform ${
+                    isSelected ? 'ring-2 ring-cream-800 scale-105' : 'opacity-80 hover:opacity-100'
+                }`;
+                chip.style.backgroundColor = sub.color;
+                chip.style.color = getContrastYIQ(sub.color);
+                chip.innerHTML = `<span>${escapeHtml(sub.name)}</span>`;
+                chip.onclick = () => selectSubject(sub);
+                container.appendChild(chip);
+            });
+
+            document.getElementById('selected-subject-label').textContent = `${currentSubject.name}`;
+            document.getElementById('selected-subject-label').style.color = currentSubject.color;
+        }
+
+        function selectSubject(sub) {
+            currentSubject = sub;
+            renderSubjectPalette();
+        }
+
+        function addSubject() {
+            const nameInput = document.getElementById('new-subject-name');
+            const colorInput = document.getElementById('new-subject-color');
+            const name = nameInput.value.trim();
+            if (!name) return;
+
+            const newSub = {
+                id: 'sub_' + Date.now(),
+                name,
+                color: colorInput.value
+            };
+
+            subjects.push(newSub);
+            localStorage.setItem('studyPlannerSubjects', JSON.stringify(subjects));
+            nameInput.value = '';
+            selectSubject(newSub);
+        }
+
+        function getContrastYIQ(hexcolor){
+            hexcolor = hexcolor.replace("#", "");
+            var r = parseInt(hexcolor.substr(0,2),16);
+            var g = parseInt(hexcolor.substr(2,2),16);
+            var b = parseInt(hexcolor.substr(4,2),16);
+            var yiq = ((r*299)+(g*587)+(b*114))/1000;
+            return (yiq >= 128) ? '#000000' : '#FFFFFF';
+        }
+
+        // --- TIMETABLE GRID LOGIC ---
+        function renderTimetableGrid() {
+            const container = document.getElementById('timetable-grid');
+            container.innerHTML = '';
+
+            HOURS.forEach((hour, hIdx) => {
+                const hourRow = document.createElement('div');
+                hourRow.className = "flex items-center gap-2";
+
+                const hourLabel = document.createElement('span');
+                hourLabel.className = "w-10 text-right font-semibold text-cream-800 shrink-0";
+                hourLabel.textContent = `${String(hour).padStart(2, '0')}:00`;
+
+                const blockGroup = document.createElement('div');
+                blockGroup.className = "grid grid-cols-6 gap-1 flex-1";
+
+                for (let m = 0; m < 6; m++) {
+                    const blockIdx = hIdx * 6 + m;
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.id = `block-${blockIdx}`;
+                    btn.className = "h-5 rounded-md bg-cream-200 border border-cream-300 transition-all cursor-pointer";
+                    btn.title = `${String(hour).padStart(2, '0')}:${m * 10}분`;
+                    btn.onclick = () => toggleTimeBlock(blockIdx);
+                    blockGroup.appendChild(btn);
+                }
+
+                hourRow.appendChild(hourLabel);
+                hourRow.appendChild(blockGroup);
+                container.appendChild(hourRow);
+            });
+        }
+
+        function toggleTimeBlock(idx) {
+            const dayData = getDayData(selectedDate);
+            if (dayData.timeBlocks[idx]) {
+                dayData.timeBlocks[idx] = null; // Clear
+            } else {
+                dayData.timeBlocks[idx] = currentSubject.color; // Color block
+            }
+            saveData();
+            updateTimetableUI();
+        }
+
+        function clearTimeBlocks() {
+            const dayData = getDayData(selectedDate);
+            dayData.timeBlocks = Array(HOURS.length * 6).fill(null);
+            saveData();
+            updateTimetableUI();
+        }
+
+        function updateTimetableUI() {
+            const dayData = getDayData(selectedDate);
+            let activeCount = 0;
+
+            dayData.timeBlocks.forEach((color, idx) => {
+                const btn = document.getElementById(`block-${idx}`);
+                if (btn) {
+                    if (color) {
+                        btn.style.backgroundColor = color;
+                        btn.style.borderColor = color;
+                        activeCount++;
+                    } else {
+                        btn.style.backgroundColor = '';
+                        btn.style.borderColor = '';
+                    }
+                }
+            });
+
+            const totalMinutes = activeCount * 10;
+            const hrs = Math.floor(totalMinutes / 60);
+            const mins = totalMinutes % 60;
+
+            const timeStr = `${hrs}시간 ${mins}분`;
+            document.getElementById('logged-time-display').textContent = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+            document.getElementById('today-total-summary').textContent = timeStr;
+        }
+
+        // --- TODO LIST LOGIC ---
+        function addTodo(e) {
+            e.preventDefault();
+            const input = document.getElementById('todo-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const dayData = getDayData(selectedDate);
+            dayData.todos.push({ id: Date.now(), text, completed: false });
+            input.value = '';
+            saveData();
+            renderTodos();
+        }
+
+        function toggleTodo(id) {
+            const dayData = getDayData(selectedDate);
+            const todo = dayData.todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+                saveData();
+                renderTodos();
+            }
+        }
+
+        function deleteTodo(id) {
+            const dayData = getDayData(selectedDate);
+            dayData.todos = dayData.todos.filter(t => t.id !== id);
+            saveData();
+            renderTodos();
+        }
+
+        function renderTodos() {
+            const dayData = getDayData(selectedDate);
+            const listEl = document.getElementById('todo-list');
+            listEl.innerHTML = '';
+
+            let completedCount = 0;
+
+            dayData.todos.forEach(todo => {
+                if (todo.completed) completedCount++;
+
+                const li = document.createElement('li');
+                li.className = `flex items-center justify-between p-2.5 rounded-xl border transition-all ${
+                    todo.completed ? 'bg-cream-200/60 border-cream-300 text-cream-800 opacity-70 line-through' : 'bg-cream-50 border-cream-300 text-cream-900'
+                }`;
+
+                // Emoji changes based on status
+                const emoji = todo.completed ? '🎉' : '📝';
+
+                li.innerHTML = `
+                    <div class="flex items-center gap-2 overflow-hidden cursor-pointer flex-1" onclick="toggleTodo(${todo.id})">
+                        <span class="text-base shrink-0">${emoji}</span>
+                        <span class="text-xs font-medium truncate">${escapeHtml(todo.text)}</span>
+                    </div>
+                    <button onclick="deleteTodo(${todo.id})" class="text-cream-800 hover:text-red-500 p-1 opacity-70 hover:opacity-100">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                `;
+                listEl.appendChild(li);
+            });
+
+            document.getElementById('todo-count').textContent = `${completedCount} / ${dayData.todos.length}`;
+            lucide.createIcons();
+        }
+
+        // --- GLOBAL SETTINGS & WIDGET LOGIC ---
+        function toggleWidget(widgetKey) {
+            const isChecked = document.getElementById(`toggle-${widgetKey}`).checked;
+            const targetEl = document.getElementById(`widget-${widgetKey}`);
+            if (targetEl) {
+                targetEl.style.display = isChecked ? 'block' : 'none';
+            }
+            saveWidgetData();
+        }
+
+        function updateDDay() {
+            const targetDateStr = document.getElementById('dday-date').value;
+            const resultEl = document.getElementById('dday-result');
+
+            if (!targetDateStr) {
+                resultEl.textContent = "D-Day";
+                return;
+            }
+
+            const today = new Date(selectedDate);
+            today.setHours(0, 0, 0, 0);
+            const target = new Date(targetDateStr);
+            target.setHours(0, 0, 0, 0);
+
+            const diffTime = target - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) {
+                resultEl.textContent = "D-DAY";
+            } else if (diffDays > 0) {
+                resultEl.textContent = `D-${diffDays}`;
+            } else {
+                resultEl.textContent = `D+${Math.abs(diffDays)}`;
+            }
+            saveWidgetData();
+        }
+
+        function saveWidgetData() {
+            const settings = {
+                title: document.getElementById('planner-title-input').value,
+                toggles: {
+                    dday: document.getElementById('toggle-dday').checked,
+                    quote: document.getElementById('toggle-quote').checked,
+                    song: document.getElementById('toggle-song').checked,
+                },
+                ddayDate: document.getElementById('dday-date').value,
+                ddayTitle: document.getElementById('dday-title').value,
+                quote: document.getElementById('quote-input').value,
+                song: document.getElementById('song-input').value,
+            };
+            localStorage.setItem('studyPlannerSettings', JSON.stringify(settings));
+        }
+
+        function loadGlobalSettings() {
+            const settings = JSON.parse(localStorage.getItem('studyPlannerSettings'));
+            if (settings) {
+                if (settings.title) document.getElementById('planner-title-input').value = settings.title;
+                if (settings.ddayDate) document.getElementById('dday-date').value = settings.ddayDate;
+                if (settings.ddayTitle) document.getElementById('dday-title').value = settings.ddayTitle;
+                if (settings.quote) document.getElementById('quote-input').value = settings.quote;
+                if (settings.song) document.getElementById('song-input').value = settings.song;
+
+                if (settings.toggles) {
+                    ['dday', 'quote', 'song'].forEach(key => {
+                        const isChecked = settings.toggles[key] !== false;
+                        document.getElementById(`toggle-${key}`).checked = isChecked;
+                        toggleWidget(key);
+                    });
+                }
+            }
+
+            // Custom Images
+            const headerImg = localStorage.getItem('headerProfileImg');
+            if (headerImg) document.getElementById('header-profile-img').src = headerImg;
+
+            const customPhoto = localStorage.getItem('customPhotoImg');
+            if (customPhoto) document.getElementById('custom-photo').src = customPhoto;
+
+            const bgImg = localStorage.getItem('bgImg');
+            if (bgImg) document.body.style.backgroundImage = `url('${bgImg}')`;
+
+            updateDDay();
+            document.getElementById('planner-title-input').addEventListener('change', saveWidgetData);
+        }
+
+        // Custom Image Upload handler
+        function uploadImage(event, targetType) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                if (targetType === 'headerProfile') {
+                    document.getElementById('header-profile-img').src = dataUrl;
+                    localStorage.setItem('headerProfileImg', dataUrl);
+                } else if (targetType === 'customPhoto') {
+                    document.getElementById('custom-photo').src = dataUrl;
+                    localStorage.setItem('customPhotoImg', dataUrl);
+                } else if (targetType === 'bgImage') {
+                    document.body.style.backgroundImage = `url('${dataUrl}')`;
+                    localStorage.setItem('bgImg', dataUrl);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetBgImage() {
+            document.body.style.backgroundImage = '';
+            localStorage.removeItem('bgImg');
+        }
+
+        // --- MONTHLY CALENDAR MODAL (Heatmap Leveling) ---
+        function openCalendarModal() {
+            document.getElementById('calendar-modal').classList.remove('hidden');
+            document.getElementById('calendar-modal').classList.add('flex');
+            renderCalendar();
+        }
+
+        function closeCalendarModal() {
+            document.getElementById('calendar-modal').classList.add('hidden');
+            document.getElementById('calendar-modal').classList.remove('flex');
+        }
+
+        function changeMonth(delta) {
+            currentModalDate.setMonth(currentModalDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = currentModalDate.getFullYear();
+            const month = currentModalDate.getMonth();
+
+            document.getElementById('modal-month-title').textContent = `${year}년 ${month + 1}월 공부 달력`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < firstDay; i++) {
+                const blank = document.createElement('div');
+                blank.className = "h-14 bg-transparent";
+                grid.appendChild(blank);
+            }
+
+            let monthlyTotalMins = 0;
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const dayData = appData[dateKey];
+                
+                let mins = 0;
+                if (dayData && dayData.timeBlocks) {
+                    const count = dayData.timeBlocks.filter(Boolean).length;
+                    mins = count * 10;
+                }
+                monthlyTotalMins += mins;
+
+                const hrsNum = mins / 60;
+                const hrsStr = hrsNum.toFixed(1);
+
+                // Determine Heatmap Color Level
+                let heatClass = "heat-lvl-0";
+                if (hrsNum >= 6) {
+                    heatClass = "heat-lvl-3";
+                } else if (hrsNum >= 3) {
+                    heatClass = "heat-lvl-2";
+                } else if (hrsNum >= 1) {
+                    heatClass = "heat-lvl-1";
+                }
+
+                const cell = document.createElement('div');
+                cell.className = `h-14 p-1 rounded-xl border flex flex-col justify-between items-center transition-all cursor-pointer ${heatClass} ${
+                    dateKey === selectedDate ? 'ring-2 ring-cream-800 font-bold' : ''
+                }`;
+                cell.onclick = () => {
+                    document.getElementById('current-date-picker').value = dateKey;
+                    selectedDate = dateKey;
+                    loadDayData();
+                    closeCalendarModal();
+                };
+
+                cell.innerHTML = `
+                    <span class="font-bold text-xs">${d}</span>
+                    ${mins > 0 ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm bg-white/70">${hrsStr}h</span>` : '<span class="text-[10px] opacity-40">-</span>'}
+                `;
+
+                grid.appendChild(cell);
+            }
+
+            const mHrs = Math.floor(monthlyTotalMins / 60);
+            const mMins = monthlyTotalMins % 60;
+            document.getElementById('modal-month-total').textContent = `${mHrs}시간 ${mMins}분`;
+        }
+
+        function loadDayData() {
+            getDayData(selectedDate);
+            updateTimetableUI();
+            renderTodos();
+            updateDDay();
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/[&<"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+    </script>
+</body>
+</html>
