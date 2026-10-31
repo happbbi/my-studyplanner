@@ -230,10 +230,26 @@
                         <!-- Dynamic Subject Chips -->
                     </div>
 
-                    <!-- 선택한 과목 색 변경 (palette 바깥) -->
-                    <div class="flex items-center gap-1.5 text-xs">
-                        <span class="text-cream-800 font-semibold">선택한 과목 색 변경</span>
-                        <input type="color" id="edit-subject-color" onchange="changeSubjectColor(this.value)" class="w-6 h-6 rounded border-0 cursor-pointer p-0 bg-transparent">
+                    <!-- 선택한 과목 색 변경 (palette 바깥, 팝업 없이 바로 클릭) -->
+                    <div class="flex flex-col gap-1 text-xs border-t border-cream-200 pt-1.5">
+                        <span class="text-cream-800 font-semibold">선택한 과목 색 변경 (색을 클릭)</span>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <button type="button" onclick="changeSubjectColor('#E57373')" title="#E57373" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#E57373"></button>
+                            <button type="button" onclick="changeSubjectColor('#F06292')" title="#F06292" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#F06292"></button>
+                            <button type="button" onclick="changeSubjectColor('#BA68C8')" title="#BA68C8" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#BA68C8"></button>
+                            <button type="button" onclick="changeSubjectColor('#7986CB')" title="#7986CB" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#7986CB"></button>
+                            <button type="button" onclick="changeSubjectColor('#64B5F6')" title="#64B5F6" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#64B5F6"></button>
+                            <button type="button" onclick="changeSubjectColor('#4DD0E1')" title="#4DD0E1" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#4DD0E1"></button>
+                            <button type="button" onclick="changeSubjectColor('#81C784')" title="#81C784" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#81C784"></button>
+                            <button type="button" onclick="changeSubjectColor('#AED581')" title="#AED581" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#AED581"></button>
+                            <button type="button" onclick="changeSubjectColor('#FFD54F')" title="#FFD54F" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#FFD54F"></button>
+                            <button type="button" onclick="changeSubjectColor('#FFB74D')" title="#FFB74D" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#FFB74D"></button>
+                            <button type="button" onclick="changeSubjectColor('#D99B6A')" title="#D99B6A" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#D99B6A"></button>
+                            <button type="button" onclick="changeSubjectColor('#A1887F')" title="#A1887F" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#A1887F"></button>
+                            <button type="button" onclick="changeSubjectColor('#90A4AE')" title="#90A4AE" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#90A4AE"></button>
+                            <button type="button" onclick="changeSubjectColor('#4A4A4A')" title="#4A4A4A" class="w-5 h-5 rounded-full border border-cream-400 hover:scale-110 transition-transform" style="background-color:#4A4A4A"></button>
+                            <input type="color" id="edit-subject-color" oninput="changeSubjectColor(this.value)" title="직접 고르기" class="w-5 h-5 rounded border-0 cursor-pointer p-0 bg-transparent">
+                        </div>
                     </div>
 
                     <!-- Add New Subject Form -->
